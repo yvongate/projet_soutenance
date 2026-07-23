@@ -1,0 +1,228 @@
+// ============================================================
+//  BiblioSmart — Schéma de base de données (Prisma / PostgreSQL)
+//  8 entités issues du diagramme de classes UML
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------- ÉNUMÉRATIONS ----------------------
+
+enum Role {
+  ETUDIANT
+  BIBLIOTHECAIRE
+  ADMINISTRATEUR
+}
+
+enum StatutExemplaire {
+  DISPONIBLE
+  EMPRUNTE
+  RESERVE
+}
+
+enum StatutReservation {
+  EN_ATTENTE // en file d'attente
+  NOTIFIEE // le livre est dispo, l'étudiant a été prévenu
+  ANNULEE // annulée par l'étudiant
+  SATISFAITE // l'étudiant a récupéré le livre
+}
+
+enum TypeNotification {
+  BIENVENUE
+  EMPRUNT
+  RAPPEL
+  DISPONIBILITE
+  MESSAGE
+}
+
+enum StatutTicket {
+  OUVERT // créé par l'étudiant, pas encore pris en charge
+  EN_COURS // un membre du staff a répondu / l'a pris en charge
+  FERME // clôturé
+}
+
+// ---------------------- ENTITÉS ----------------------
+
+/// Utilisateur : les 3 rôles partagent la même table (champ `role`)
+model Utilisateur {
+  id                String   @id @default(uuid())
+  matricule         String?  @unique // uniquement pour les étudiants
+  nom               String
+  prenom            String
+  email             String    @unique
+  roles             Role[]    @default([ETUDIANT]) // un compte peut cumuler plusieurs rôles
+  motDePasse        String
+  resetToken        String?   @unique // jeton de réinitialisation de mot de passe
+  resetTokenExpiry  DateTime? // expiration du jeton (usage unique, 1h)
+  premiereConnexion Boolean   @default(true)
+  actif             Boolean   @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  emprunts            Emprunt[]
+  transactions        TransactionQR[]
+  reservations        Reservation[]
+  messages            Message[]      @relation("MessagesEnvoyes") // messages envoyés
+  ticketsOuverts      Ticket[]           @relation("TicketsEtudiant") // tickets ouverts (étudiant)
+  ticketsPrisEnCharge Ticket[]           @relation("TicketsPrisEnCharge") // tickets pris en charge (staff)
+  notifications       Notification[]
+  pushSubscriptions   PushSubscription[]
+
+  @@map("utilisateurs")
+}
+
+/// Livre : la fiche bibliographique (le titre, pas la copie physique)
+model Livre {
+  id          String   @id @default(uuid())
+  titre       String
+  auteur      String
+  isbn        String?
+  categorie   String
+  description String?
+  couverture  String? // URL de l'image de couverture
+  cote        String? // cote de rangement
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  exemplaires  Exemplaire[]
+  reservations Reservation[]
+
+  @@map("livres")
+}
+
+/// Exemplaire : une copie physique d'un livre, avec son QR Code unique
+model Exemplaire {
+  id        String           @id @default(uuid())
+  livreId   String
+  qrCode    String           @unique
+  statut    StatutExemplaire @default(DISPONIBLE)
+  createdAt DateTime         @default(now())
+
+  // Relations
+  livre        Livre           @relation(fields: [livreId], references: [id], onDelete: Cascade)
+  emprunts     Emprunt[]
+  transactions TransactionQR[]
+
+  @@map("exemplaires")
+}
+
+/// Emprunt : un exemplaire emprunté par un utilisateur
+model Emprunt {
+  id                  String    @id @default(uuid())
+  exemplaireId        String
+  userId              String
+  dateEmprunt         DateTime  @default(now())
+  dateRetourPrevue    DateTime // J+30
+  dateRetourEffective DateTime? // null tant que non rendu
+
+  // Relations
+  exemplaire Exemplaire  @relation(fields: [exemplaireId], references: [id])
+  user       Utilisateur @relation(fields: [userId], references: [id])
+
+  @@map("emprunts")
+}
+
+/// TransactionQR : QR Code temporaire (5 min) du flux d'emprunt "Option B"
+model TransactionQR {
+  id           String   @id @default(uuid())
+  exemplaireId String
+  userId       String
+  token        String   @unique
+  expireAt     DateTime // création + 5 minutes
+  utilise      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  exemplaire Exemplaire  @relation(fields: [exemplaireId], references: [id])
+  user       Utilisateur @relation(fields: [userId], references: [id])
+
+  @@map("transactions_qr")
+}
+
+/// Reservation : file d'attente FIFO sur un livre indisponible
+model Reservation {
+  id              String            @id @default(uuid())
+  livreId         String
+  userId          String
+  dateReservation DateTime          @default(now())
+  statut          StatutReservation @default(EN_ATTENTE)
+  position        Int // position dans la file
+
+  // Relations
+  livre Livre       @relation(fields: [livreId], references: [id], onDelete: Cascade)
+  user  Utilisateur @relation(fields: [userId], references: [id])
+
+  @@map("reservations")
+}
+
+/// Ticket : demande d'assistance ouverte par un étudiant (boîte partagée du staff).
+/// N'importe quel bibliothécaire/administrateur peut consulter et répondre.
+model Ticket {
+  id                String       @id @default(uuid())
+  etudiantId        String
+  sujet             String
+  statut            StatutTicket @default(OUVERT)
+  prisEnChargeParId String? // 1er membre du staff ayant répondu (indicatif)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  // Relations
+  etudiant     Utilisateur  @relation("TicketsEtudiant", fields: [etudiantId], references: [id])
+  prisEnCharge Utilisateur? @relation("TicketsPrisEnCharge", fields: [prisEnChargeParId], references: [id])
+  messages     Message[]
+
+  @@map("tickets")
+}
+
+/// Message : un message au sein d'un ticket (envoyé par l'étudiant OU un membre du staff)
+model Message {
+  id           String   @id @default(uuid())
+  ticketId     String
+  expediteurId String
+  contenu      String
+  lu           Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  ticket     Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  expediteur Utilisateur @relation("MessagesEnvoyes", fields: [expediteurId], references: [id])
+
+  @@map("messages")
+}
+
+/// PushSubscription : abonnement d'un appareil aux notifications push (Web Push)
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String // clé publique du client
+  auth      String // secret d'authentification
+  createdAt DateTime @default(now())
+
+  user Utilisateur @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
+}
+
+/// Notification : notification adressée à un utilisateur
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      TypeNotification
+  message   String
+  lu        Boolean          @default(false)
+  dateEnvoi DateTime         @default(now())
+
+  // Relations
+  user Utilisateur @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}

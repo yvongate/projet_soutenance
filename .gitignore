@@ -1,0 +1,11 @@
+# Dépôt allow-list : seuls back/, front/ et ce README sont versionnés.
+# Tout le reste à la racine (docs de travail, artefacts BMad, UML source,
+# guides internes...) reste local et n'est jamais poussé.
+/*
+!/back/
+!/front/
+!/README.md
+!/.gitignore
+
+# Les .gitignore internes à back/ et front/ prennent le relais pour exclure
+# node_modules, .env*, .next/, dist/, etc. à l'intérieur de ces dossiers.
