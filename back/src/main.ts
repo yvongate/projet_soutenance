@@ -36,6 +36,7 @@ async function bootstrap() {
     origin: origins,
     credentials: true,
   });
+  console.log(`🔓 CORS autorisé pour : ${origins.join(', ')}`);
 
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
