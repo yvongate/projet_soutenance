@@ -61,6 +61,7 @@ model Utilisateur {
   resetToken        String?   @unique // jeton de réinitialisation de mot de passe
   resetTokenExpiry  DateTime? // expiration du jeton (usage unique, 1h)
   premiereConnexion Boolean   @default(true)
+  tutorielVu        Boolean   @default(false) // visite guidée déjà vue (mémorisé côté compte, pas par appareil)
   actif             Boolean   @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

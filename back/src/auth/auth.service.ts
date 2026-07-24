@@ -112,6 +112,15 @@ export class AuthService {
     };
   }
 
+  /** Marque la visite guidée comme vue pour ce compte (mémorisé côté serveur). */
+  async marquerTutorielVu(userId: string) {
+    const maj = await this.prisma.utilisateur.update({
+      where: { id: userId },
+      data: { tutorielVu: true },
+    });
+    return this.profil(maj);
+  }
+
   /**
    * Mot de passe oublié : génère un jeton de réinitialisation (1h, usage unique)
    * et envoie un email avec le lien. Réponse volontairement générique

@@ -57,4 +57,12 @@ export class AuthController {
   me(@CurrentUser() user: AuthUser) {
     return user;
   }
+
+  /** Marque la visite guidée comme vue (mémorisé sur le compte). */
+  @Post('tutoriel-vu')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  tutorielVu(@CurrentUser('id') userId: string) {
+    return this.authService.marquerTutorielVu(userId);
+  }
 }

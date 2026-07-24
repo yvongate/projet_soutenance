@@ -18,6 +18,7 @@ export interface User {
   email: string;
   roles: Role[];
   premiereConnexion: boolean;
+  tutorielVu: boolean;
   actif: boolean;
 }
 
