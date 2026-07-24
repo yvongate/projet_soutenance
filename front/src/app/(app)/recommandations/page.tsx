@@ -96,9 +96,7 @@ function RecoContenu() {
           return (
             <Section
               titre={
-                estTfIdf
-                  ? 'Similaires à vos lectures (TF-IDF)'
-                  : 'Les plus empruntés'
+                estTfIdf ? 'Similaires à vos lectures' : 'Les plus empruntés'
               }
               icone={<TrendingUp className="h-5 w-5 text-primary" />}
               livres={reco.parSimilarite}

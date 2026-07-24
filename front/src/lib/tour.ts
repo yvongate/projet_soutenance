@@ -4,18 +4,13 @@ import { driver, type DriveStep } from 'driver.js';
 import type { User } from '@/lib/types';
 import { aRole, estStaff } from '@/lib/types';
 
-/** Rôle principal (le plus large) : sert au choix des étapes et à la clé « déjà vu ». */
+/** Rôle principal (le plus large) : sert au choix des étapes du tour. */
 export type ProfilTour = 'admin' | 'staff' | 'etudiant';
 
-export function profilTour(user: User): ProfilTour {
+function profilTour(user: User): ProfilTour {
   if (aRole(user, 'ADMINISTRATEUR')) return 'admin';
   if (estStaff(user)) return 'staff';
   return 'etudiant';
-}
-
-/** Clé localStorage indiquant que le tour a déjà été vu pour ce profil. */
-export function cleTour(user: User): string {
-  return `bibliosmart-tour-${profilTour(user)}`;
 }
 
 const bienvenue: DriveStep = {
@@ -61,6 +56,13 @@ function etapes(profil: ProfilTour): DriveStep[] {
           title: 'Statistiques 📊',
           description:
             'Le tableau de bord complet : emprunts, retards, livres et catégories populaires.',
+        },
+      },
+      {
+        popover: {
+          title: 'Le guichet 🎫',
+          description:
+            'En tant qu’administrateur, vous avez aussi accès au guichet (depuis l’accueil) : y valider les emprunts en scannant le QR de transaction, et enregistrer les retours en scannant le QR du livre.',
         },
       },
       {

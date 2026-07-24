@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, BookmarkPlus, BookX } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
 import { useAuth } from '@/store/auth';
-import { aRole, type LivreDetail } from '@/lib/types';
+import { aRole, estStaff, type LivreDetail } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -117,30 +117,33 @@ export default function LivreDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                Exemplaires ({livre.exemplaires.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {livre.exemplaires.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Aucun exemplaire enregistré.
-                </p>
-              ) : (
-                livre.exemplaires.map((ex) => (
-                  <div
-                    key={ex.id}
-                    className="flex items-center justify-between rounded-md border px-3 py-2"
-                  >
-                    <span className="font-mono text-sm">{ex.qrCode}</span>
-                    <StatutBadge statut={ex.statut} />
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+          {/* Détail des exemplaires (QR codes + statuts) : réservé au staff */}
+          {estStaff(user) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">
+                  Exemplaires ({livre.exemplaires.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {livre.exemplaires.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Aucun exemplaire enregistré.
+                  </p>
+                ) : (
+                  livre.exemplaires.map((ex) => (
+                    <div
+                      key={ex.id}
+                      className="flex items-center justify-between rounded-md border px-3 py-2"
+                    >
+                      <span className="font-mono text-sm">{ex.qrCode}</span>
+                      <StatutBadge statut={ex.statut} />
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </div>
