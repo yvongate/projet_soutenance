@@ -1,7 +1,21 @@
 import { useAuth } from '@/store/auth';
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
+/**
+ * Normalise l'URL de l'API : retire le(s) slash(es) final(aux) et garantit le
+ * préfixe `/api` (toutes les routes du backend sont préfixées ainsi).
+ * Évite les 404 silencieux quand la variable d'environnement est renseignée
+ * sans `/api` ou avec un slash de trop.
+ */
+function normaliserBaseUrl(url: string): string {
+  const sansSlashFinal = url.replace(/\/+$/, '');
+  return sansSlashFinal.endsWith('/api')
+    ? sansSlashFinal
+    : `${sansSlashFinal}/api`;
+}
+
+const BASE_URL = normaliserBaseUrl(
+  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api',
+);
 
 export class ApiError extends Error {
   status: number;
