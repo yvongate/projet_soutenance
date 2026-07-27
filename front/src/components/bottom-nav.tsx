@@ -38,7 +38,7 @@ export function BottomNav() {
     icon: Library,
     prefixes: ['/livres'],
   };
-  const accueil: Item = { href: '/', label: 'Accueil', icon: Home };
+  const accueil: Item = { href: '/accueil', label: 'Accueil', icon: Home };
   const messages: Item = {
     href: '/tickets',
     label: 'Messages',

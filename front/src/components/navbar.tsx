@@ -32,7 +32,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-10 border-b border-white/20 bg-background/55 backdrop-blur-2xl backdrop-saturate-150 [box-shadow:inset_0_1px_0_0_rgba(255,255,255,0.35)]">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
+        <Link href="/accueil" className="flex items-center gap-2 font-semibold">
           <BookMarked className="h-5 w-5 text-primary" />
           BiblioSmart
         </Link>

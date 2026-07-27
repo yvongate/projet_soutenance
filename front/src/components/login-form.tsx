@@ -41,7 +41,7 @@ export function LoginForm({
       if (res.access_token && res.user) {
         setAuth(res.access_token, res.user);
         toast.success(`Bienvenue ${res.user.prenom} !`);
-        router.replace('/');
+        router.replace('/accueil');
       }
     } catch (err) {
       toast.error(

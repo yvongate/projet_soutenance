@@ -44,7 +44,7 @@ function ChangePasswordForm() {
       });
       setAuth(res.access_token, res.user);
       toast.success('Mot de passe modifié. Bienvenue !');
-      router.replace('/');
+      router.replace('/accueil');
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : 'Échec du changement';
       toast.error(msg);

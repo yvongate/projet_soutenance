@@ -20,7 +20,7 @@ export function ProductTour() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!user || pathname !== '/' || user.tutorielVu) return;
+    if (!user || pathname !== '/accueil' || user.tutorielVu) return;
 
     // Laisse le temps au bottom nav / à la navbar de se monter (ancres du tour).
     const t = setTimeout(() => {
