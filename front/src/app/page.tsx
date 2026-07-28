@@ -176,7 +176,6 @@ const MARKUP = `
       <span class="brand-name">BiblioSmart</span>
     </div>
     <div class="nav-actions">
-      <a class="btn btn-ghost" href="/login">Se connecter</a>
       <a class="btn btn-primary" href="/login">Explorer le catalogue</a>
     </div>
   </nav>
